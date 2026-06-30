@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedBase — My Medical Hub</title>
+<style>
+  :root {
+    --navy: #0A1628;
+    --navy2: #112240;
+    --navy3: #1B3358;
+    --teal: #00B4D8;
+    --teal2: #0096c7;
+    --amber: #F4A261;
+    --red: #E63946;
+    --green: #2DC653;
+    --gray: #8D99AE;
+    --gray2: #CDD3DE;
+    --white: #F8FAFF;
+    --card: #142038;
+    --border: rgba(0,180,216,0.18);
+    --shadow: 0 4px 32px rgba(0,0,0,0.35);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--navy); color: var(--white); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    position: fixed; top: 0; left: 0; width: 240px; height: 100vh;
+    background: var(--navy2); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; z-index: 100;
+    transition: transform .3s ease;
+  }
+  .sidebar-logo {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: var(--white); }
+  .sidebar-logo h1 span { color: var(--teal); }
+  .sidebar-logo p { font-size: 11px; color: var(--gray); margin-top: 2px; letter-spacing: .5px; text-transform: uppercase; }
+  .ecg-line { width: 100%; height: 28px; margin-top: 10px; }
+
+  nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+  .nav-section { padding: 8px 16px 4px; font-size: 10px; color: var(--gray); letter-spacing: 1.2px; text-transform: uppercase; font-weight: 600; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; cursor: pointer; font-size: 14px; font-weight: 500;
+    color: var(--gray2); transition: all .2s; border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: rgba(0,180,216,0.08); color: var(--white); }
+  .nav-item.active { background: rgba(0,180,216,0.12); color: var(--teal); border-left-color: var(--teal); }
+  .nav-item .icon { font-size: 17px; width: 22px; text-align: center; }
+  .nav-badge { margin-left: auto; background: var(--teal); color: var(--navy); font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px; }
+
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+  .admin-btn {
+    width: 100%; padding: 9px; background: var(--amber); color: var(--navy);
+    border: none; border-radius: 8px; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: opacity .2s; letter-spacing: .3px;
+  }
+  .admin-btn:hover { opacity: .88; }
+  .owner-tag { font-size: 11px; color: var(--gray); margin-top: 8px; text-align: center; }
+
+  /* ── TOPBAR ── */
+  #topbar {
+    position: fixed; top: 0; left: 240px; right: 0; height: 60px;
+    background: rgba(10,22,40,.95); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 28px; gap: 16px; z-index: 90;
+  }
+  #menu-toggle { display: none; background: none; border: none; color: var(--white); font-size: 22px; cursor: pointer; }
+  #topbar-title { font-size: 18px; font-weight: 700; flex: 1; }
+  .search-box { display: flex; align-items: center; gap: 8px; background: var(--navy3); border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; }
+  .search-box input { background: none; border: none; outline: none; color: var(--white); font-size: 13px; width: 180px; }
+  .search-box input::placeholder { color: var(--gray); }
+  .date-chip { background: var(--navy3); border: 1px solid var(--border); border-radius: 8px; padding: 5px 12px; font-size: 12px; color: var(--gray2); white-space: nowrap; }
+
+  /* ── MAIN ── */
+  #main { margin-left: 240px; padding-top: 60px; min-height: 100vh; }
+  .page { display: none; padding: 32px 28px; }
+  .page.active { display: block; }
+
+  /* ── CARDS ── */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 14px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  /* ── STAT CARD ── */
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 8px; }
+  .stat-card .stat-icon { font-size: 26px; }
+  .stat-card .stat-val { font-size: 30px; font-weight: 800; color: var(--white); line-height: 1; }
+  .stat-card .stat-label { font-size: 12px; color: var(--gray); font-weight: 500; }
+  .stat-card .stat-sub { font-size: 11px; color: var(--teal); margin-top: 4px; }
+
+  /* ── SECTIONS ── */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .section-header h2 { font-size: 22px; font-weight: 800; }
+  .btn { padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all .2s; }
+  .btn-teal { background: var(--teal); color: var(--navy); }
+  .btn-teal:hover { background: var(--teal2); }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--gray2); }
+  .btn-ghost:hover { border-color: var(--teal); color: var(--teal); }
+  .btn-red { background: var(--red); color: white; }
+  .btn-amber { background: var(--amber); color: var(--navy); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { background: var(--navy3); color: var(--gray); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; padding: 12px 16px; text-align: left; }
+  td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--gray2); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(0,180,216,0.04); }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .tag-teal { background: rgba(0,180,216,0.15); color: var(--teal); }
+  .tag-amber { background: rgba(244,162,97,0.15); color: var(--amber); }
+  .tag-red { background: rgba(230,57,70,0.15); color: var(--red); }
+  .tag-green { background: rgba(45,198,83,0.15); color: var(--green); }
+
+  /* ── SCHEDULE ── */
+  .day-block { margin-bottom: 20px; }
+  .day-label { font-size: 13px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .sched-item { display: flex; align-items: center; gap: 14px; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
+  .sched-time { font-size: 12px; color: var(--teal); font-weight: 700; min-width: 80px; }
+  .sched-info h4 { font-size: 14px; font-weight: 600; color: var(--white); }
+  .sched-info p { font-size: 12px; color: var(--gray); margin-top: 2px; }
+  .sched-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--teal); flex-shrink: 0; }
+
+  /* ── NOTES ── */
+  .note-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .note-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; cursor: pointer; transition: transform .2s, border-color .2s; position: relative; }
+  .note-card:hover { transform: translateY(-2px); border-color: var(--teal); }
+  .note-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .note-card p { font-size: 13px; color: var(--gray); line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .note-card .note-meta { margin-top: 12px; font-size: 11px; color: var(--gray); display: flex; gap: 8px; align-items: center; }
+  .note-color-strip { position: absolute; top: 0; left: 0; width: 4px; height: 100%; border-radius: 14px 0 0 14px; }
+
+  /* ── PEOPLE ── */
+  .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+  .person-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px 16px; text-align: center; }
+  .person-avatar { width: 70px; height: 70px; border-radius: 50%; background: var(--navy3); display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto 12px; border: 2px solid var(--border); }
+  .person-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .person-card p { font-size: 12px; color: var(--gray); line-height: 1.5; }
+  .person-role { font-size: 11px; color: var(--teal); font-weight: 600; margin-top: 6px; }
+
+  /* ── LECTURES ── */
+  .lecture-item { display: flex; align-items: center; gap: 16px; padding: 14px 18px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; }
+  .lecture-icon { width: 44px; height: 44px; border-radius: 10px; background: rgba(0,180,216,0.12); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .lecture-info h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .lecture-info p { font-size: 12px; color: var(--gray); }
+  .lecture-meta { margin-left: auto; text-align: right; font-size: 12px; color: var(--gray); }
+  .lecture-meta .size { font-size: 11px; color: var(--gray); margin-top: 3px; }
+
+  /* ── NEWS/LINKS ── */
+  .news-item { padding: 16px 18px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; }
+  .news-item h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .news-item p { font-size: 13px; color: var(--gray); line-height: 1.55; }
+  .news-item .news-meta { margin-top: 10px; font-size: 11px; color: var(--teal); font-weight: 600; display: flex; gap: 12px; }
+  .link-card { display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; text-decoration: none; transition: border-color .2s; }
+  .link-card:hover { border-color: var(--teal); }
+  .link-icon { width: 40px; height: 40px; border-radius: 8px; background: rgba(244,162,97,0.15); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .link-info h4 { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 2px; }
+  .link-info p { font-size: 12px; color: var(--gray); }
+  .link-arrow { margin-left: auto; color: var(--teal); font-size: 18px; }
+
+  /* ── GRADES ── */
+  .grade-item { display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; }
+  .grade-circle { width: 50px; height: 50px; border-radius: 50%; border: 3px solid var(--teal); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: var(--teal); flex-shrink: 0; }
+  .grade-info h4 { font-size: 14px; font-weight: 700; }
+  .grade-info p { font-size: 12px; color: var(--gray); margin-top: 3px; }
+  .grade-bar-wrap { flex: 1; }
+  .grade-bar { height: 6px; background: var(--navy3); border-radius: 3px; margin-top: 8px; }
+  .grade-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--teal), var(--teal2)); }
+
+  /* ── MODALS ── */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--navy2); border: 1px solid var(--border); border-radius: 18px; padding: 30px; width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); }
+  .modal h3 { font-size: 20px; font-weight: 800; margin-bottom: 22px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 7px; }
+  .form-group input, .form-group textarea, .form-group select {
+    width: 100%; background: var(--navy3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; color: var(--white); font-size: 14px;
+    outline: none; transition: border-color .2s; font-family: inherit;
+  }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--teal); }
+  .form-group textarea { min-height: 90px; resize: vertical; }
+  .form-group select option { background: var(--navy2); }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+  .modal-close { position: absolute; top: 18px; right: 22px; background: none; border: none; color: var(--gray); font-size: 22px; cursor: pointer; }
+
+  /* ── ADMIN ── */
+  .admin-section { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 24px; }
+  .admin-section h3 { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+  .admin-section p { font-size: 12px; color: var(--gray); margin-bottom: 18px; }
+  .admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .admin-action-btn { padding: 14px 12px; background: var(--navy3); border: 1px solid var(--border); border-radius: 10px; color: var(--white); cursor: pointer; font-size: 13px; font-weight: 600; transition: all .2s; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .admin-action-btn .icon { font-size: 22px; }
+  .admin-action-btn:hover { border-color: var(--teal); color: var(--teal); background: rgba(0,180,216,0.08); }
+  .admin-indicator { display: inline-flex; align-items: center; gap: 6px; background: rgba(244,162,97,.15); color: var(--amber); font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 20px; }
+  .admin-indicator::before { content: '●'; font-size: 8px; }
+
+  /* ── TOAST ── */
+  #toast { position: fixed; bottom: 28px; right: 28px; background: var(--teal); color: var(--navy); padding: 12px 22px; border-radius: 10px; font-size: 14px; font-weight: 700; z-index: 500; transform: translateY(80px); opacity: 0; transition: all .3s; pointer-events: none; }
+  #toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ── LOGIN ── */
+  #login-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 300; align-items: center; justify-content: center; }
+  #login-overlay.open { display: flex; }
+  .login-box { background: var(--navy2); border: 1px solid var(--border); border-radius: 18px; padding: 36px; width: 360px; max-width: 95vw; box-shadow: var(--shadow); text-align: center; }
+  .login-box h2 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  .login-box p { font-size: 13px; color: var(--gray); margin-bottom: 24px; }
+  .login-box input { width: 100%; background: var(--navy3); border: 1px solid var(--border); border-radius: 8px; padding: 11px 14px; color: var(--white); font-size: 14px; outline: none; margin-bottom: 14px; font-family: inherit; text-align: center; letter-spacing: 4px; }
+  .login-box input:focus { border-color: var(--teal); }
+  .login-box button { width: 100%; padding: 12px; background: var(--amber); color: var(--navy); border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .login-err { color: var(--red); font-size: 12px; margin-top: 8px; }
+
+  /* ── DASHBOARD HERO ── */
+  .dash-hero { background: linear-gradient(135deg, var(--navy3) 0%, var(--navy2) 100%); border: 1px solid var(--border); border-radius: 16px; padding: 30px; margin-bottom: 24px; position: relative; overflow: hidden; }
+  .dash-hero h2 { font-size: 28px; font-weight: 900; margin-bottom: 6px; }
+  .dash-hero p { font-size: 14px; color: var(--gray); max-width: 480px; }
+  .dash-hero .hero-accent { position: absolute; right: 30px; top: 50%; transform: translateY(-50%); font-size: 72px; opacity: .07; }
+  .dash-hero .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,180,216,.15); color: var(--teal); font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 20px; margin-bottom: 14px; }
+  .pulse { animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+
+  /* ── IMAGE GRID ── */
+  .img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+  .img-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .img-card .img-placeholder { height: 130px; background: var(--navy3); display: flex; align-items: center; justify-content: center; font-size: 40px; }
+  .img-card .img-info { padding: 10px 12px; }
+  .img-card .img-info h4 { font-size: 13px; font-weight: 700; }
+  .img-card .img-info p { font-size: 11px; color: var(--gray); margin-top: 2px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0; }
+    #topbar { left: 0; }
+    #menu-toggle { display: block; }
+    .grid3, .grid4 { grid-template-columns: 1fr 1fr; }
+    .grid2 { grid-template-columns: 1fr; }
+    .page { padding: 20px 14px; }
+    .search-box { display: none; }
+    .date-chip { display: none; }
+  }
+  @media (max-width: 480px) {
+    .grid3, .grid4 { grid-template-columns: 1fr; }
+  }
+
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--gray); }
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: .4; }
+  .empty-state p { font-size: 14px; }
+
+  #overlay-close { display: none; position: fixed; inset: 0; z-index: 99; background: rgba(0,0,0,.3); }
+  #overlay-close.open { display: block; }
+
+  .today-highlight { background: rgba(0,180,216,.08); border-color: var(--teal) !important; }
+  .progress-ring { color: var(--teal); font-size: 13px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <h1>Med<span>Base</span></h1>
+    <p>My Medical Hub</p>
+    <svg class="ecg-line" viewBox="0 0 200 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polyline points="0,14 30,14 38,4 44,24 50,14 60,14 68,2 72,26 76,14 90,14 120,14 128,6 132,22 136,14 200,14" stroke="#00B4D8" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <animate attributeName="stroke-dashoffset" values="300;0;-300" dur="4s" repeatCount="indefinite"/>
+      </polyline>
+    </svg>
+  </div>
+  <nav>
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">🏠</span> Dashboard</div>
+    <div class="nav-item" onclick="showPage('schedule',this)"><span class="icon">📅</span> Schedule</div>
+    <div class="nav-item" onclick="showPage('lectures',this)"><span class="icon">📚</span> Lectures</div>
+    <div class="nav-item" onclick="showPage('notes',this)"><span class="icon">📝</span> Notes</div>
+    <div class="nav-section">College</div>
+    <div class="nav-item" onclick="showPage('people',this)"><span class="icon">👥</span> People</div>
+    <div class="nav-item" onclick="showPage('news',this)"><span class="icon">📰</span> News & Links</div>
+    <div class="nav-section">Academic</div>
+    <div class="nav-item" onclick="showPage('grades',this)"><span class="icon">🎓</span> Grades & Degrees</div>
+    <div class="nav-item" onclick="showPage('images',this)"><span class="icon">🖼️</span> Images</div>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="admin-btn" onclick="openLogin()">⚙️ Admin Panel</button>
+    <div class="owner-tag">Owner access only</div>
+  </div>
+</div>
+
+<!-- OVERLAY (mobile) -->
+<div id="overlay-close" onclick="closeSidebar()"></div>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <button id="menu-toggle" onclick="toggleSidebar()">☰</button>
+  <span id="topbar-title">Dashboard</span>
+  <div class="search-box">
+    <span>🔍</span>
+    <input type="text" id="search-input" placeholder="Search anything..." oninput="handleSearch(this.value)">
+  </div>
+  <div class="date-chip" id="date-chip"></div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="dash-hero">
+      <div class="hero-badge"><span class="pulse">●</span> Active Session</div>
+      <h2 id="greeting">Good morning, Doctor-in-training 👨‍⚕️</h2>
+      <p>Your personal medical hub — lectures, notes, schedules and more, all in one place.</p>
+      <div class="hero-accent">🩺</div>
+    </div>
+    <div class="grid4" style="margin-bottom:24px" id="stats-grid"></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Today's Schedule</div>
+        <div id="today-schedule"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Recent Notes</div>
+        <div id="recent-notes"></div>
+      </div>
+    </div>
+    <div style="margin-top:18px" class="card">
+      <div class="card-title">Latest News</div>
+      <div id="latest-news"></div>
+    </div>
+  </div>
+
+  <!-- SCHEDULE -->
+  <div class="page" id="page-schedule">
+    <div class="section-header">
+      <h2>📅 Schedule</h2>
+      <div id="sched-admin-btns" style="display:none">
+        <button class="btn btn-teal" onclick="openModal('schedule')">+ Add Event</button>
+      </div>
+    </div>
+    <div id="schedule-list"></div>
+  </div>
+
+  <!-- LECTURES -->
+  <div class="page" id="page-lectures">
+    <div class="section-header">
+      <h2>📚 Lectures</h2>
+      <div id="lec-admin-btns" style="display:none">
+        <button class="btn btn-teal" onclick="openModal('lecture')">+ Add Lecture</button>
+      </div>
+    </div>
+    <div id="lectures-list"></div>
+  </div>
+
+  <!-- NOTES -->
+  <div class="page" id="page-notes">
+    <div class="section-header">
+      <h2>📝 Notes</h2>
+      <div id="notes-admin-btns" style="display:none">
+        <button class="btn btn-teal" onclick="openModal('note')">+ New Note</button>
+      </div>
+    </div>
+    <div class="note-grid" id="notes-list"></div>
+  </div>
+
+  <!-- PEOPLE -->
+  <div class="page" id="page-people">
+    <div class="section-header">
+      <h2>👥 People</h2>
+      <div id="ppl-admin-btns" style="display:none">
+        <button class="btn btn-teal" onclick="openModal('person')">+ Add Person</button>
+      </div>
+    </div>
+    <div class="people-grid" id="people-list"></div>
+  </div>
+
+  <!-- NEWS & LINKS -->
+  <div class="page" id="page-news">
+    <div class="section-header">
+      <h2>📰 News & Links</h2>
+      <div id="news-admin-btns" style="display:none; gap:8px; display:none">
+        <button class="btn btn-teal" onclick="openModal('news')">+ Add News</button>
+        <button class="btn btn-amber" onclick="openModal('link')">+ Add Link</button>
+      </div>
+    </div>
+    <div class="grid2">
+      <div>
+        <div class="card-title" style="margin-bottom:14px">📢 News</div>
+        <div id="news-list"></div>
+      </div>
+      <div>
+        <div class="card-title" style="margin-bottom:14px">🔗 Channels & Links</div>
+        <div id="links-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRADES -->
+  <div class="page" id="page-grades">
+    <div class="section-header">
+      <h2>🎓 Grades & Degrees</h2>
+      <div id="grades-admin-btns" style="display:none">
+        <button class="btn btn-teal" onclick="openModal('grade')">+ Add Grade</button>
+      </div>
+    </div>
+    <div class="grid2">
+      <div>
+        <div class="card-title" style="margin-bottom:14px">Subject Grades</div>
+        <div id="grades-list"></div>
+      </div>
+      <div>
+        <div class="card" id="gpa-card">
+          <div class="card-title">Overall GPA</div>
+          <div id="gpa-display" style="text-align:center;padding:20px 0"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMAGES -->
+  <div class="page" id="page-images">
+    <div class="section-header">
+      <h2>🖼️ Images</h2>
+      <div id="img-admin-btns" style="display:none">
+        <button class="btn btn-teal" onclick="openModal('image')">+ Add Image</button>
+      </div>
+    </div>
+    <div class="img-grid" id="images-list"></div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div class="page" id="page-admin">
+    <div class="admin-indicator">Admin Mode Active</div>
+    <div class="section-header">
+      <h2>⚙️ Admin Panel</h2>
+      <button class="btn btn-ghost" onclick="logout()">Log Out</button>
+    </div>
+    <div class="admin-section">
+      <h3>📅 Schedule</h3>
+      <p>Add, edit, or remove schedule events and lecture times.</p>
+      <div class="admin-grid">
+        <button class="admin-action-btn" onclick="openModal('schedule')"><span class="icon">➕</span>Add Event</button>
+        <button class="admin-action-btn" onclick="showPage('schedule', null, true)"><span class="icon">📋</span>View Schedule</button>
+      </div>
+    </div>
+    <div class="admin-section">
+      <h3>📚 Lectures & Files</h3>
+      <p>Manage lecture entries, file links, and subjects.</p>
+      <div class="admin-grid">
+        <button class="admin-action-btn" onclick="openModal('lecture')"><span class="icon">➕</span>Add Lecture</button>
+        <button class="admin-action-btn" onclick="showPage('lectures', null, true)"><span class="icon">📋</span>View All</button>
+      </div>
+    </div>
+    <div class="admin-section">
+      <h3>📝 Notes</h3>
+      <p>Create and manage personal study notes.</p>
+      <div class="admin-grid">
+        <button class="admin-action-btn" onclick="openModal('note')"><span class="icon">➕</span>New Note</button>
+        <button class="admin-action-btn" onclick="showPage('notes', null, true)"><span class="icon">📋</span>View Notes</button>
+      </div>
+    </div>
+    <div class="admin-section">
+      <h3>👥 People</h3>
+      <p>Manage professors, colleagues, and contacts.</p>
+      <div class="admin-grid">
+        <button class="admin-action-btn" onclick="openModal('person')"><span class="icon">➕</span>Add Person</button>
+        <button class="admin-action-btn" onclick="showPage('people', null, true)"><span class="icon">📋</span>View People</button>
+      </div>
+    </div>
+    <div class="admin-section">
+      <h3>📰 News & Links</h3>
+      <p>Post news updates and manage channel links.</p>
+      <div class="admin-grid">
+        <button class="admin-action-btn" onclick="openModal('news')"><span class="icon">➕</span>Add News</button>
+        <button class="admin-action-btn" onclick="openModal('link')"><span class="icon">🔗</span>Add Link</button>
+        <button class="admin-action-btn" onclick="showPage('news', null, true)"><span class="icon">📋</span>View All</button>
+      </div>
+    </div>
+    <div class="admin-section">
+      <h3>🎓 Grades & Degrees</h3>
+      <p>Track grades, scores, and academic achievements.</p>
+      <div class="admin-grid">
+        <button class="admin-action-btn" onclick="openModal('grade')"><span class="icon">➕</span>Add Grade</button>
+        <button class="admin-action-btn" onclick="showPage('grades', null, true)"><span class="icon">📊</span>View Grades</button>
+      </div>
+    </div>
+    <div class="admin-section">
+      <h3>🖼️ Images</h3>
+      <p>Add image entries with descriptions.</p>
+      <div class="admin-grid">
+        <button class="admin-action-btn" onclick="openModal('image')"><span class="icon">➕</span>Add Image</button>
+        <button class="admin-action-btn" onclick="showPage('images', null, true)"><span class="icon">🖼️</span>View Images</button>
+      </div>
+    </div>
+    <div class="admin-section">
+      <h3>🗑️ Data Management</h3>
+      <p>Export your data or reset specific sections.</p>
+      <div class="admin-grid">
+        <button class="admin-action-btn" onclick="exportData()"><span class="icon">💾</span>Export Data</button>
+        <button class="admin-action-btn" onclick="changePassword()"><span class="icon">🔑</span>Change Password</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- LOGIN OVERLAY -->
+<div id="login-overlay">
+  <div class="login-box">
+    <div style="font-size:40px;margin-bottom:12px">🔐</div>
+    <h2>Admin Access</h2>
+    <p>Enter your admin password to continue</p>
+    <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Unlock Admin Panel</button>
+    <div class="login-err" id="login-err"></div>
+    <div style="margin-top:16px"><button onclick="closeLogin()" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px">Cancel</button></div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+<div class="modal" id="modal-box">
+  <h3 id="modal-title">Add Item</h3>
+  <div id="modal-body"></div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-teal" id="modal-save-btn" onclick="saveModal()">Save</button>
+  </div>
+</div>
+</div>
+
+<!-- NOTE VIEWER -->
+<div class="modal-overlay" id="note-modal" onclick="if(event.target===this)closeNoteModal()">
+<div class="modal" id="note-modal-box">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+    <h3 id="note-modal-title" style="margin-bottom:0"></h3>
+    <button onclick="closeNoteModal()" style="background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer">✕</button>
+  </div>
+  <div id="note-modal-tag" style="margin-bottom:16px"></div>
+  <div id="note-modal-body" style="font-size:14px;color:var(--gray2);line-height:1.7;white-space:pre-wrap"></div>
+  <div id="note-modal-meta" style="margin-top:18px;font-size:11px;color:var(--gray)"></div>
+  <div class="modal-actions" id="note-modal-actions"></div>
+</div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ── STATE ──
+const PASS_KEY = 'medbase_pass';
+const DATA_KEY = 'medbase_data';
+let isAdmin = false;
+let currentModal = null;
+let editingId = null;
+
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function getDefaultPassword() {
+  return localStorage.getItem(PASS_KEY) || 'admin1234';
+}
+
+// ── DATA ──
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(DATA_KEY)) || defaultData(); }
+  catch(e) { return defaultData(); }
+}
+function saveData(d) { localStorage.setItem(DATA_KEY, JSON.stringify(d)); }
+
+function defaultData() {
+  return {
+    schedule: [
+      {id:1, day:'Monday', time:'08:00', title:'Anatomy Lecture', location:'Hall A', color:'teal', note:'Dr. Hassan'},
+      {id:2, day:'Monday', time:'10:00', title:'Physiology Lab', location:'Lab 2', color:'amber', note:'Bring lab coat'},
+      {id:3, day:'Tuesday', time:'09:00', title:'Biochemistry', location:'Hall B', color:'teal', note:'Chapter 5–7'},
+      {id:4, day:'Wednesday', time:'08:00', title:'Pathology', location:'Hall C', color:'teal', note:''},
+      {id:5, day:'Thursday', time:'11:00', title:'Clinical Skills', location:'Clinic', color:'green', note:'Practical session'},
+    ],
+    lectures: [
+      {id:1, title:'Introduction to Anatomy', subject:'Anatomy', date:'2024-09-10', type:'PDF', size:'4.2 MB', url:'', notes:'First lecture of the year'},
+      {id:2, title:'Cardiac Physiology', subject:'Physiology', date:'2024-09-15', type:'PPT', size:'8.1 MB', url:'', notes:'ECG diagrams included'},
+      {id:3, title:'Enzyme Kinetics', subject:'Biochemistry', date:'2024-09-18', type:'PDF', size:'2.3 MB', url:'', notes:''},
+    ],
+    notes: [
+      {id:1, title:'Brachial Plexus Summary', content:'The brachial plexus originates from C5–T1 nerve roots. Key branches include: Musculocutaneous (C5-C7), Axillary (C5-C6), Radial (C5-T1), Median (C6-T1), Ulnar (C8-T1).\n\nRemember: My Aunt Really Makes Unique Notions (Musculocutaneous, Axillary, Radial, Median, Ulnar).', tag:'Anatomy', color:'#00B4D8', date:'2024-09-12'},
+      {id:2, title:'Cardiac Cycle Notes', content:'Systole: ventricles contract, blood pushed out. Diastole: ventricles relax, fill with blood.\n\nNormal HR: 60-100 bpm\nNormal BP: 120/80 mmHg\nCardiac output = HR × Stroke Volume', tag:'Physiology', color:'#F4A261', date:'2024-09-16'},
+      {id:3, title:'Krebs Cycle Mnemonics', content:'Citrate Is Krebs Starting Substrate For Making Oxalate:\nCitrate → Isocitrate → α-Ketoglutarate → Succinyl-CoA → Succinate → Fumarate → Malate → Oxaloacetate', tag:'Biochemistry', color:'#2DC653', date:'2024-09-19'},
+    ],
+    people: [
+      {id:1, name:'Dr. Ahmed Hassan', role:'Professor', dept:'Anatomy Department', email:'', phone:'', notes:'Head of Anatomy dept. Office: Room 204', emoji:'👨‍⚕️'},
+      {id:2, name:'Dr. Sarah Khalil', role:'Professor', dept:'Physiology', email:'', phone:'', notes:'Clinical skills coordinator', emoji:'👩‍⚕️'},
+      {id:3, name:'Omar Al-Rashid', role:'Classmate', dept:'Year 2, Group A', email:'', phone:'', notes:'Study group leader', emoji:'👨‍🎓'},
+      {id:4, name:'Nour Ibrahim', role:'Classmate', dept:'Year 2, Group A', email:'', phone:'', notes:'Top of the class in Biochem', emoji:'👩‍🎓'},
+    ],
+    news: [
+      {id:1, title:'Exam Schedule Released', content:'The final exam schedule for Semester 1 has been posted on the college portal. Anatomy written exam is on Dec 15.', category:'Academic', date:'2024-10-01'},
+      {id:2, title:'Medical Conference', content:'The Annual Medical Student Conference will be held on November 3rd. Abstract submissions open until Oct 20.', category:'Event', date:'2024-10-05'},
+    ],
+    links: [
+      {id:1, title:'Osmosis - Med Videos', url:'https://osmosis.org', description:'High-quality medical education videos', icon:'🎬'},
+      {id:2, title:'Amboss Medical Library', url:'https://amboss.com', description:'Clinical knowledge and Qbank', icon:'📖'},
+      {id:3, title:'Radiopaedia', url:'https://radiopaedia.org', description:'Radiology reference and cases', icon:'🩻'},
+      {id:4, title:'PubMed', url:'https://pubmed.ncbi.nlm.nih.gov', description:'Medical research database', icon:'🔬'},
+    ],
+    grades: [
+      {id:1, subject:'Anatomy', score:88, total:100, grade:'B+', year:'Year 1'},
+      {id:2, subject:'Physiology', score:92, total:100, grade:'A', year:'Year 1'},
+      {id:3, subject:'Biochemistry', score:79, total:100, grade:'B', year:'Year 1'},
+      {id:4, subject:'Pathology', score:85, total:100, grade:'B+', year:'Year 2'},
+    ],
+    images: [
+      {id:1, title:'Brachial Plexus Diagram', category:'Anatomy', emoji:'🧠', description:'Detailed diagram of all brachial plexus branches', date:'2024-09-10'},
+      {id:2, title:'ECG Normal Sinus Rhythm', category:'Physiology', emoji:'💓', description:'12-lead ECG showing normal sinus rhythm', date:'2024-09-15'},
+    ]
+  };
+}
+
+let DB = loadData();
+
+// ── NAVIGATION ──
+function showPage(id, el, skipNav) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const titles = {dashboard:'Dashboard',schedule:'Schedule',lectures:'Lectures',notes:'Notes',people:'People',news:'News & Links',grades:'Grades & Degrees',images:'Images',admin:'Admin Panel'};
+  document.getElementById('topbar-title').textContent = titles[id] || id;
+  closeSidebar();
+  renderPage(id);
+  // Show admin buttons on pages if admin
+  if (isAdmin) showAdminButtons();
+}
+
+function renderPage(id) {
+  if (id === 'dashboard') renderDashboard();
+  else if (id === 'schedule') renderSchedule();
+  else if (id === 'lectures') renderLectures();
+  else if (id === 'notes') renderNotes();
+  else if (id === 'people') renderPeople();
+  else if (id === 'news') renderNews();
+  else if (id === 'grades') renderGrades();
+  else if (id === 'images') renderImages();
+}
+
+// ── DASHBOARD ──
+function renderDashboard() {
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greeting').textContent = `${greeting}, Doctor-in-training 👨‍⚕️`;
+  document.getElementById('date-chip').textContent = `${DAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}`;
+
+  // Stats
+  const sg = document.getElementById('stats-grid');
+  const avgGrade = DB.grades.length ? Math.round(DB.grades.reduce((a,g)=>a+g.score,0)/DB.grades.length) : 0;
+  const stats = [
+    {icon:'📚', val:DB.lectures.length, label:'Lectures', sub:'Total files'},
+    {icon:'📝', val:DB.notes.length, label:'Notes', sub:'Study notes'},
+    {icon:'🎓', val:avgGrade+'%', label:'Avg Grade', sub:'Academic score'},
+    {icon:'👥', val:DB.people.length, label:'People', sub:'Contacts'},
+  ];
+  sg.innerHTML = stats.map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-val">${s.val}</div><div class="stat-label">${s.label}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
+
+  // Today schedule
+  const todayName = DAYS[new Date().getDay()];
+  const todayItems = DB.schedule.filter(s=>s.day===todayName);
+  const ts = document.getElementById('today-schedule');
+  if (todayItems.length === 0) {
+    ts.innerHTML = `<div style="color:var(--gray);font-size:13px;padding:10px 0">No events today. Enjoy your day! 😊</div>`;
+  } else {
+    ts.innerHTML = todayItems.map(s=>`<div class="sched-item" style="margin-bottom:8px"><div class="sched-dot"></div><div class="sched-info"><h4>${s.title}</h4><p>${s.time} · ${s.location}</p></div></div>`).join('');
+  }
+
+  // Recent notes
+  const rn = document.getElementById('recent-notes');
+  const recent = DB.notes.slice(-3).reverse();
+  rn.innerHTML = recent.length ? recent.map(n=>`<div style="padding:10px 0;border-bottom:1px solid var(--border)"><div style="font-size:13px;font-weight:700">${n.title}</div><div style="font-size:12px;color:var(--gray);margin-top:3px">${n.tag} · ${n.date||''}</div></div>`).join('') : `<div style="color:var(--gray);font-size:13px">No notes yet.</div>`;
+
+  // Latest news
+  const ln = document.getElementById('latest-news');
+  const latest = DB.news.slice(-2).reverse();
+  ln.innerHTML = latest.length ? latest.map(n=>`<div style="padding:12px 0;border-bottom:1px solid var(--border)"><div style="font-size:14px;font-weight:700">${n.title}</div><div style="font-size:12px;color:var(--gray);margin-top:4px;line-height:1.5">${n.content.slice(0,100)}...</div><div style="font-size:11px;color:var(--teal);margin-top:6px;font-weight:600">${n.category} · ${n.date}</div></div>`).join('') : `<div style="color:var(--gray);font-size:13px">No news yet.</div>`;
+}
+
+// ── SCHEDULE ──
+function renderSchedule() {
+  const daysOrder = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const list = document.getElementById('schedule-list');
+  const grouped = {};
+  daysOrder.forEach(d => grouped[d] = []);
+  DB.schedule.forEach(s => { if(grouped[s.day]) grouped[s.day].push(s); });
+  daysOrder.forEach(d => grouped[d].sort((a,b)=>a.time.localeCompare(b.time)));
+  const todayName = DAYS[new Date().getDay()];
+  list.innerHTML = daysOrder.map(day => {
+    const items = grouped[day];
+    if (!items.length && !isAdmin) return '';
+    const isToday = day === todayName;
+    return `<div class="day-block"><div class="day-label">${isToday?'⭐ ':''} ${day}${isToday?' (Today)':''}</div>
+    ${items.length ? items.map(s=>`
+      <div class="sched-item${isToday?' today-highlight':''}">
+        <div class="sched-dot" style="background:${s.color==='amber'?'var(--amber)':s.color==='green'?'var(--green)':'var(--teal)'}"></div>
+        <div style="flex:1"><div class="sched-info"><h4>${s.title}</h4><p>${s.time} · ${s.location}${s.note?` · ${s.note}`:''}</p></div></div>
+        ${isAdmin?`<div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="editItem('schedule',${s.id})">✏️</button><button class="btn btn-red btn-sm" onclick="deleteItem('schedule',${s.id})">🗑️</button></div>`:''}
+      </div>`).join('') : `<div style="color:var(--gray);font-size:13px;padding:8px 0">No events</div>`}
+    </div>`;
+  }).join('');
+}
+
+// ── LECTURES ──
+function renderLectures() {
+  const list = document.getElementById('lectures-list');
+  if (!DB.lectures.length) { list.innerHTML = emptyState('No lectures added yet.', '📚'); return; }
+  const typeIcon = t => ({PDF:'📄',PPT:'📊',VIDEO:'🎬',LINK:'🔗'}[t]||'📁');
+  list.innerHTML = DB.lectures.map(l=>`
+    <div class="lecture-item">
+      <div class="lecture-icon">${typeIcon(l.type)}</div>
+      <div class="lecture-info">
+        <h4>${l.title}</h4>
+        <p>${l.subject} · ${l.date}${l.notes?` · ${l.notes}`:''}</p>
+      </div>
+      <div class="lecture-meta">
+        <span class="tag tag-teal">${l.type}</span>
+        <div class="size">${l.size||''}</div>
+        ${l.url?`<div style="margin-top:6px"><a href="${l.url}" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">Open ↗</a></div>`:''}
+      </div>
+      ${isAdmin?`<div style="display:flex;gap:6px;margin-left:8px"><button class="btn btn-ghost btn-sm" onclick="editItem('lecture',${l.id})">✏️</button><button class="btn btn-red btn-sm" onclick="deleteItem('lecture',${l.id})">🗑️</button></div>`:''}
+    </div>`).join('');
+}
+
+// ── NOTES ──
+function renderNotes() {
+  const list = document.getElementById('notes-list');
+  if (!DB.notes.length) { list.innerHTML = emptyState('No notes yet. Create your first study note!', '📝'); return; }
+  list.innerHTML = DB.notes.map(n=>`
+    <div class="note-card" onclick="viewNote(${n.id})">
+      <div class="note-color-strip" style="background:${n.color||'var(--teal)'}"></div>
+      <h4>${n.title}</h4>
+      <p>${n.content}</p>
+      <div class="note-meta">
+        <span class="tag tag-teal" style="background:${n.color||'var(--teal)'}22;color:${n.color||'var(--teal)'}">${n.tag||'Note'}</span>
+        <span>${n.date||''}</span>
+      </div>
+    </div>`).join('');
+}
+
+function viewNote(id) {
+  const n = DB.notes.find(x=>x.id===id);
+  if (!n) return;
+  document.getElementById('note-modal-title').textContent = n.title;
+  document.getElementById('note-modal-tag').innerHTML = `<span class="tag" style="background:${n.color||'var(--teal)'}22;color:${n.color||'var(--teal)'}">${n.tag||'Note'}</span>`;
+  document.getElementById('note-modal-body').textContent = n.content;
+  document.getElementById('note-modal-meta').textContent = `Last updated: ${n.date||''}`;
+  document.getElementById('note-modal-actions').innerHTML = isAdmin ? `<button class="btn btn-ghost" onclick="closeNoteModal();editItem('note',${n.id})">✏️ Edit</button><button class="btn btn-red" onclick="closeNoteModal();deleteItem('note',${n.id})">🗑️ Delete</button>` : '';
+  document.getElementById('note-modal').classList.add('open');
+}
+function closeNoteModal() { document.getElementById('note-modal').classList.remove('open'); }
+
+// ── PEOPLE ──
+function renderPeople() {
+  const list = document.getElementById('people-list');
+  if (!DB.people.length) { list.innerHTML = emptyState('No people added yet.', '👥'); return; }
+  list.innerHTML = DB.people.map(p=>`
+    <div class="person-card">
+      <div class="person-avatar">${p.emoji||'👤'}</div>
+      <h4>${p.name}</h4>
+      <div class="person-role">${p.role}</div>
+      <p style="margin-top:6px">${p.dept}</p>
+      ${p.notes?`<p style="margin-top:8px;font-size:12px;color:var(--gray)">${p.notes}</p>`:''}
+      ${isAdmin?`<div style="display:flex;gap:6px;justify-content:center;margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="editItem('person',${p.id})">✏️</button><button class="btn btn-red btn-sm" onclick="deleteItem('person',${p.id})">🗑️</button></div>`:''}
+    </div>`).join('');
+}
+
+// ── NEWS ──
+function renderNews() {
+  const nl = document.getElementById('news-list');
+  const ll = document.getElementById('links-list');
+
+  nl.innerHTML = DB.news.length ? DB.news.map(n=>`
+    <div class="news-item">
+      <h4>${n.title}</h4>
+      <p>${n.content}</p>
+      <div class="news-meta">
+        <span class="tag tag-teal">${n.category}</span>
+        <span>${n.date}</span>
+        ${isAdmin?`<button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="editItem('news',${n.id})">✏️</button><button class="btn btn-red btn-sm" onclick="deleteItem('news',${n.id})">🗑️</button>`:''}
+      </div>
+    </div>`).join('') : emptyState('No news posted yet.', '📰');
+
+  ll.innerHTML = DB.links.length ? DB.links.map(l=>`
+    <a class="link-card" href="${l.url}" target="_blank">
+      <div class="link-icon">${l.icon||'🔗'}</div>
+      <div class="link-info"><h4>${l.title}</h4><p>${l.description}</p></div>
+      <span class="link-arrow">↗</span>
+      ${isAdmin?`<div onclick="event.preventDefault()" style="display:flex;gap:6px;margin-left:8px"><button class="btn btn-ghost btn-sm" onclick="editItem('link',${l.id})">✏️</button><button class="btn btn-red btn-sm" onclick="deleteItem('link',${l.id})">🗑️</button></div>`:''}
+    </a>`).join('') : emptyState('No links added yet.', '🔗');
+}
+
+// ── GRADES ──
+function renderGrades() {
+  const list = document.getElementById('grades-list');
+  const gpaEl = document.getElementById('gpa-display');
+  list.innerHTML = DB.grades.length ? DB.grades.map(g=>{
+    const pct = Math.round((g.score/g.total)*100);
+    const color = pct>=90?'var(--green)':pct>=75?'var(--teal)':pct>=60?'var(--amber)':'var(--red)';
+    return `<div class="grade-item">
+      <div class="grade-circle" style="border-color:${color};color:${color}">${g.grade}</div>
+      <div class="grade-bar-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="grade-info"><h4>${g.subject}</h4><p>${g.score}/${g.total} · ${g.year}</p></div>
+          <span style="font-size:13px;font-weight:700;color:${color}">${pct}%</span>
+        </div>
+        <div class="grade-bar"><div class="grade-fill" style="width:${pct}%;background:${color}"></div></div>
+      </div>
+      ${isAdmin?`<div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="editItem('grade',${g.id})">✏️</button><button class="btn btn-red btn-sm" onclick="deleteItem('grade',${g.id})">🗑️</button></div>`:''}
+    </div>`}).join('') : emptyState('No grades added yet.', '🎓');
+
+  if (DB.grades.length) {
+    const avg = Math.round(DB.grades.reduce((a,g)=>a+(g.score/g.total)*100,0)/DB.grades.length);
+    const color = avg>=90?'var(--green)':avg>=75?'var(--teal)':avg>=60?'var(--amber)':'var(--red)';
+    gpaEl.innerHTML = `<div style="font-size:72px;font-weight:900;color:${color};line-height:1">${avg}<span style="font-size:28px">%</span></div><div style="font-size:14px;color:var(--gray);margin-top:8px">${DB.grades.length} subjects tracked</div>`;
+  } else {
+    gpaEl.innerHTML = `<div style="color:var(--gray);font-size:14px">No grades yet</div>`;
+  }
+}
+
+// ── IMAGES ──
+function renderImages() {
+  const list = document.getElementById('images-list');
+  if (!DB.images.length) { list.innerHTML = emptyState('No images added yet.', '🖼️'); return; }
+  list.innerHTML = DB.images.map(i=>`
+    <div class="img-card">
+      <div class="img-placeholder">${i.emoji||'🖼️'}</div>
+      <div class="img-info">
+        <h4>${i.title}</h4>
+        <p>${i.category}${i.date?` · ${i.date}`:''}</p>
+        ${i.description?`<p style="margin-top:4px;font-size:11px;color:var(--gray)">${i.description}</p>`:''}
+        ${isAdmin?`<div style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="editItem('image',${i.id})">✏️</button><button class="btn btn-red btn-sm" onclick="deleteItem('image',${i.id})">🗑️</button></div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+// ── MODAL FORMS ──
+const MODAL_FORMS = {
+  schedule: {
+    title: 'Schedule Event',
+    fields: [
+      {name:'title',label:'Event Title',type:'text',placeholder:'e.g. Anatomy Lecture'},
+      {name:'day',label:'Day',type:'select',options:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']},
+      {name:'time',label:'Time',type:'time'},
+      {name:'location',label:'Location',type:'text',placeholder:'e.g. Hall A'},
+      {name:'note',label:'Note (optional)',type:'text',placeholder:'Additional info'},
+      {name:'color',label:'Color',type:'select',options:['teal','amber','green']},
+    ]
+  },
+  lecture: {
+    title: 'Add Lecture',
+    fields: [
+      {name:'title',label:'Lecture Title',type:'text',placeholder:'e.g. Cardiac Physiology'},
+      {name:'subject',label:'Subject',type:'text',placeholder:'e.g. Physiology'},
+      {name:'date',label:'Date',type:'date'},
+      {name:'type',label:'File Type',type:'select',options:['PDF','PPT','VIDEO','LINK','OTHER']},
+      {name:'size',label:'File Size',type:'text',placeholder:'e.g. 4.2 MB'},
+      {name:'url',label:'URL / Link (optional)',type:'url',placeholder:'https://...'},
+      {name:'notes',label:'Notes',type:'textarea',placeholder:'Additional notes'},
+    ]
+  },
+  note: {
+    title: 'Study Note',
+    fields: [
+      {name:'title',label:'Note Title',type:'text',placeholder:'e.g. Brachial Plexus Summary'},
+      {name:'tag',label:'Subject Tag',type:'text',placeholder:'e.g. Anatomy'},
+      {name:'color',label:'Accent Color',type:'select',options:['#00B4D8','#F4A261','#2DC653','#E63946','#8D99AE']},
+      {name:'date',label:'Date',type:'date'},
+      {name:'content',label:'Content',type:'textarea',placeholder:'Write your note here...'},
+    ]
+  },
+  person: {
+    title: 'Add Person',
+    fields: [
+      {name:'name',label:'Full Name',type:'text',placeholder:'e.g. Dr. Ahmed Hassan'},
+      {name:'emoji',label:'Avatar Emoji',type:'text',placeholder:'e.g. 👨‍⚕️'},
+      {name:'role',label:'Role',type:'select',options:['Professor','Assistant','Classmate','Admin Staff','Other']},
+      {name:'dept',label:'Department / Group',type:'text',placeholder:'e.g. Anatomy Department'},
+      {name:'email',label:'Email (optional)',type:'email',placeholder:'email@example.com'},
+      {name:'phone',label:'Phone (optional)',type:'text',placeholder:'+1 ...'},
+      {name:'notes',label:'Notes',type:'textarea',placeholder:'Additional information'},
+    ]
+  },
+  news: {
+    title: 'Post News',
+    fields: [
+      {name:'title',label:'Headline',type:'text',placeholder:'e.g. Exam Schedule Released'},
+      {name:'category',label:'Category',type:'select',options:['Academic','Event','Announcement','Deadline','Other']},
+      {name:'date',label:'Date',type:'date'},
+      {name:'content',label:'Content',type:'textarea',placeholder:'News content...'},
+    ]
+  },
+  link: {
+    title: 'Add Link / Channel',
+    fields: [
+      {name:'title',label:'Title',type:'text',placeholder:'e.g. Osmosis Videos'},
+      {name:'icon',label:'Icon Emoji',type:'text',placeholder:'e.g. 🎬'},
+      {name:'url',label:'URL',type:'url',placeholder:'https://...'},
+      {name:'description',label:'Description',type:'text',placeholder:'Short description'},
+    ]
+  },
+  grade: {
+    title: 'Add Grade',
+    fields: [
+      {name:'subject',label:'Subject',type:'text',placeholder:'e.g. Anatomy'},
+      {name:'year',label:'Year',type:'text',placeholder:'e.g. Year 1'},
+      {name:'score',label:'Score',type:'number',placeholder:'e.g. 88'},
+      {name:'total',label:'Out of',type:'number',placeholder:'e.g. 100'},
+      {name:'grade',label:'Letter Grade',type:'text',placeholder:'e.g. A, B+'},
+    ]
+  },
+  image: {
+    title: 'Add Image Entry',
+    fields: [
+      {name:'title',label:'Title',type:'text',placeholder:'e.g. Brachial Plexus Diagram'},
+      {name:'emoji',label:'Icon Emoji',type:'text',placeholder:'e.g. 🧠'},
+      {name:'category',label:'Category',type:'text',placeholder:'e.g. Anatomy'},
+      {name:'date',label:'Date',type:'date'},
+      {name:'description',label:'Description',type:'textarea',placeholder:'Image description or source'},
+    ]
+  }
+};
+
+function openModal(type, prefill) {
+  const schema = MODAL_FORMS[type];
+  if (!schema) return;
+  currentModal = type;
+  editingId = prefill ? prefill.id : null;
+  document.getElementById('modal-title').textContent = (editingId ? 'Edit ' : 'Add ') + schema.title;
+  document.getElementById('modal-body').innerHTML = schema.fields.map(f=>{
+    const val = prefill ? (prefill[f.name]||'') : '';
+    if (f.type === 'select') {
+      return `<div class="form-group"><label>${f.label}</label><select name="${f.name}">${f.options.map(o=>`<option value="${o}"${o===val?'selected':''}>${o}</option>`).join('')}</select></div>`;
+    } else if (f.type === 'textarea') {
+      return `<div class="form-group"><label>${f.label}</label><textarea name="${f.name}" placeholder="${f.placeholder||''}">${val}</textarea></div>`;
+    } else {
+      return `<div class="form-group"><label>${f.label}</label><input type="${f.type}" name="${f.name}" placeholder="${f.placeholder||''}" value="${val}"></div>`;
+    }
+  }).join('');
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  currentModal = null; editingId = null;
+}
+
+function saveModal() {
+  const form = document.getElementById('modal-body');
+  const data = {};
+  form.querySelectorAll('input,textarea,select').forEach(el => { data[el.name] = el.value; });
+  const arr = DB[currentModal === 'schedule' ? 'schedule' : currentModal === 'lecture' ? 'lectures' : currentModal === 'note' ? 'notes' : currentModal === 'person' ? 'people' : currentModal === 'news' ? 'news' : currentModal === 'link' ? 'links' : currentModal === 'grade' ? 'grades' : 'images'];
+  if (editingId) {
+    const idx = arr.findIndex(x=>x.id===editingId);
+    if (idx !== -1) { arr[idx] = {...arr[idx], ...data}; }
+  } else {
+    data.id = Date.now();
+    arr.push(data);
+  }
+  saveData(DB);
+  closeModal();
+  showToast(editingId ? 'Updated successfully!' : 'Added successfully!');
+  renderPage(currentPage());
+}
+
+function currentPage() {
+  const active = document.querySelector('.page.active');
+  return active ? active.id.replace('page-','') : 'dashboard';
+}
+
+function editItem(type, id) {
+  const arr = {schedule:'schedule',lecture:'lectures',note:'notes',person:'people',news:'news',link:'links',grade:'grades',image:'images'};
+  const list = DB[arr[type]];
+  const item = list.find(x=>x.id===id);
+  if (item) openModal(type, item);
+}
+
+function deleteItem(type, id) {
+  if (!confirm('Delete this item?')) return;
+  const arr = {schedule:'schedule',lecture:'lectures',note:'notes',person:'people',news:'news',link:'links',grade:'grades',image:'images'};
+  const key = arr[type];
+  DB[key] = DB[key].filter(x=>x.id!==id);
+  saveData(DB);
+  showToast('Deleted.');
+  renderPage(currentPage());
+}
+
+// ── ADMIN ──
+function openLogin() {
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-err').textContent = '';
+  document.getElementById('login-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('login-pass').focus(),200);
+}
+function closeLogin() { document.getElementById('login-overlay').classList.remove('open'); }
+
+function doLogin() {
+  const pass = document.getElementById('login-pass').value;
+  if (pass === getDefaultPassword()) {
+    isAdmin = true;
+    closeLogin();
+    showToast('Admin access granted ✓');
+    showAdminButtons();
+    showPage('admin', null, true);
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  } else {
+    document.getElementById('login-err').textContent = 'Incorrect password. Try again.';
+    document.getElementById('login-pass').value = '';
+  }
+}
+
+function logout() {
+  isAdmin = false;
+  hideAdminButtons();
+  showPage('dashboard', document.querySelector('.nav-item'));
+  showToast('Logged out.');
+}
+
+function showAdminButtons() {
+  ['sched','lec','notes','ppl','news','grades','img'].forEach(k=>{
+    const el = document.getElementById(k+'-admin-btns');
+    if (el) el.style.display = 'flex';
+  });
+  // news special
+  const newsBtn = document.getElementById('news-admin-btns');
+  if (newsBtn) newsBtn.style.display = 'flex';
+}
+function hideAdminButtons() {
+  ['sched','lec','notes','ppl','news','grades','img'].forEach(k=>{
+    const el = document.getElementById(k+'-admin-btns');
+    if (el) el.style.display = 'none';
+  });
+}
+
+function changePassword() {
+  const np = prompt('Enter new password (min 6 characters):');
+  if (!np || np.length < 6) { alert('Password too short.'); return; }
+  localStorage.setItem(PASS_KEY, np);
+  showToast('Password changed!');
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(DB, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'medbase-backup.json';
+  a.click();
+  showToast('Data exported!');
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ── SIDEBAR MOBILE ──
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay-close').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay-close').classList.remove('open');
+}
+
+// ── SEARCH ──
+function handleSearch(q) {
+  if (!q.trim()) return;
+  q = q.toLowerCase();
+  // Simple cross-data search — highlight result
+  let results = [];
+  DB.notes.forEach(n=>{ if(n.title.toLowerCase().includes(q)||n.content.toLowerCase().includes(q)) results.push({type:'Note',title:n.title,page:'notes'}); });
+  DB.lectures.forEach(l=>{ if(l.title.toLowerCase().includes(q)||l.subject.toLowerCase().includes(q)) results.push({type:'Lecture',title:l.title,page:'lectures'}); });
+  DB.people.forEach(p=>{ if(p.name.toLowerCase().includes(q)) results.push({type:'Person',title:p.name,page:'people'}); });
+  if (results.length) {
+    showToast(`Found ${results.length} result(s) for "${q}"`);
+  }
+}
+
+// ── INIT ──
+function init() {
+  const now = new Date();
+  document.getElementById('date-chip').textContent = `${DAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}`;
+  renderDashboard();
+}
+
+init();
+</script>
+</body>
+</html>
